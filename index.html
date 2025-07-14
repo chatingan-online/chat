@@ -1,23 +1,64 @@
-<!-- ======================= -->
-<!-- index.html FULL VERSI -->
-<!-- ======================= -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login Cinta Kita 💖</title>
+  <title>💖Login💖</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    body { font-family: sans-serif; background: #ece5dd; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-    .box { background: #fff; padding: 30px; border-radius: 14px; box-shadow: 0 0 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; display: none; opacity: 0; transform: scale(0.9); transition: all 0.3s ease; }
-    .box.active { display: block; opacity: 1; transform: scale(1); }
-    h2 { text-align: center; margin-bottom: 20px; color: #075e54; }
-    input, button { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; font-size: 16px; }
+    body {
+      font-family: sans-serif;
+      background: #ece5dd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+    .box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 14px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      display: none;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: all 0.3s ease;
+    }
+    .box.active {
+      display: block;
+      opacity: 1;
+      transform: scale(1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #075e54;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      font-size: 16px;
+    }
     input { border: 1px solid #ccc; }
-    button { background: #075e54; color: #fff; border: none; cursor: pointer; }
+    button {
+      background: #075e54;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
     button:hover { background: #0a6d63; }
-    .error { color: red; font-size: 14px; text-align: center; margin-bottom: 10px; }
+    .error {
+      color: red;
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -26,6 +67,7 @@
     <input type="text" id="inputName" placeholder="Nama kamu..."/>
     <button id="submitName">Lanjut</button>
   </div>
+
   <div class="box" id="quizBox">
     <h2>💖 Sebelum Masuk...</h2>
     <p id="quizQuestion" style="text-align:center; font-size:15px;">Loading pertanyaan...</p>
@@ -33,8 +75,9 @@
     <input type="text" id="quizAnswer" placeholder="Jawabanmu di sini..."/>
     <button id="quizButton">Lanjut</button>
   </div>
+
   <div class="box" id="loginBox">
-    <h2>Login Chat Khusus</h2>
+    <h2>Login</h2>
     <div class="error" id="errorBox"></div>
     <input type="text" id="username" placeholder="Username" required/>
     <input type="password" id="password" placeholder="Password" required/>
@@ -47,18 +90,18 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ubXpzaGxkZmVxYnZuY3hyam9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NjI0NDYsImV4cCI6MjA2NzQzODQ0Nn0.o0enC-0TGCNc-vRvAU5kfWFsaNeeMoeiQEMLW_NdORI"
   );
 
-  const quizzes = [
-    { q: "Kapan tanggal spesial kita?", a: "03-04-2025" },
-    { q: "Apa panggilan spesial kita?", a: "Weeh" },
-    { q: "Siapa yang paling kamu cintai?", a: ["KHALID", "NADIN"] }
-  ];
-
-  const users = {
-    "khalid": "03042025",
-    "nadin": "03042025"
-  };
-
+  let quizzes = [];
   let selectedQuiz, attemptCount = 0, maxAttempts = 3;
+
+  async function loadQuizzes() {
+    const { data, error } = await supabase.from("quiz_questions").select("question, answer");
+    if (error || !data || data.length === 0) {
+      document.getElementById("quizQuestion").textContent = "Gagal memuat soal 😢";
+      return;
+    }
+    quizzes = data.map(row => ({ q: row.question, a: row.answer }));
+    pickQuiz();
+  }
 
   function showOnly(id) {
     ["nameBox", "quizBox", "loginBox"].forEach(boxId => {
@@ -96,7 +139,7 @@
     if (Array.isArray(selectedQuiz.a)) {
       correct = selectedQuiz.a.map(a => a.toLowerCase()).includes(userAnswer);
     } else {
-      correct = userAnswer === selectedQuiz.a.toLowerCase();
+      correct = userAnswer === String(selectedQuiz.a).toLowerCase();
     }
     await logQuizAnswer(userAnswer, correct ? "benar" : "salah");
     if (correct) {
@@ -106,7 +149,7 @@
       attemptCount++;
       const quizError = document.getElementById("quizError");
       if (attemptCount >= maxAttempts) {
-        quizError.textContent = "💔 Terlalu banyak salah 😭";
+        quizError.innerHTML = "Maaf jawaban anda salah!.<br>'Mohon di Ingat-ingat Lagi Yaa....!😢'";
         document.getElementById("quizAnswer").disabled = true;
       } else {
         quizError.textContent = `Salah jawaban (${attemptCount}/${maxAttempts})`;
@@ -114,28 +157,42 @@
     }
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  // ✅ USERNAME DAN PASSWORD
+  const users = {
+    "khalid": "03042025",
+    "nadin": "03042025",
+    "admin": "admin",
+    "admin1": "admin1"
+  };
+
+  document.addEventListener("DOMContentLoaded", async () => {
     const loggedIn = sessionStorage.getItem("loggedIn");
     const senderName = sessionStorage.getItem("senderName");
     const quizPassed = sessionStorage.getItem("quizPassed");
 
     if (loggedIn) {
-      location.href = "chat.html";
+      const isAdmin = sessionStorage.getItem("isAdmin");
+      const role = sessionStorage.getItem("adminRole");
+      if (isAdmin === "true") {
+        window.location.href = "admin.html";
+      } else {
+        window.location.href = "chat.html";
+      }
     } else if (!senderName) {
       showOnly("nameBox");
     } else if (!quizPassed) {
       showOnly("quizBox");
-      pickQuiz();
+      await loadQuizzes();
     } else {
       showOnly("loginBox");
     }
 
-    document.getElementById("submitName").addEventListener("click", () => {
+    document.getElementById("submitName").addEventListener("click", async () => {
       const name = document.getElementById("inputName").value.trim();
       if (name) {
         sessionStorage.setItem("senderName", name);
         showOnly("quizBox");
-        pickQuiz();
+        await loadQuizzes();
       }
     });
 
@@ -161,15 +218,23 @@
         errorBox.textContent = "Username atau password salah.";
         return;
       }
-      sessionStorage.setItem("loggedIn", "true");
-      window.location.href = "chat.html";
-    });
-  });
 
-  window.addEventListener("beddin", () => {
-    if (!window.location.href.includes("chat.html")) {
-      sessionStorage.clear();
-    }
+      // ✅ ATUR ROLE ADMIN
+      if (user === "admin") {
+        sessionStorage.setItem("isAdmin", "true");
+        sessionStorage.setItem("adminRole", "full");
+}       else if (user === "admin1") {
+        sessionStorage.setItem("isAdmin", "true");
+        sessionStorage.setItem("adminRole", "limited");
+}       else {
+        sessionStorage.setItem("isAdmin", "false");
+}
+
+      sessionStorage.setItem("loggedIn", "true");
+      window.location.href = sessionStorage.getItem("isAdmin") === "true"
+        ? "admin.html"
+        : "chat.html";
+    });
   });
 
   document.addEventListener("keydown", function (e) {
